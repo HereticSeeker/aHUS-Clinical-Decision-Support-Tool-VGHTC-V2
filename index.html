@@ -475,7 +475,7 @@
 </div>
 
 <div class="a4-container" id="mainContent">
-    <form id="checklistForm" data-rule-scope="aHUS-initial-only" data-theme-version="3.1">
+    <form id="checklistForm" data-rule-scope="aHUS-initial-only" data-theme-version="3.1" data-export-layout-version="1.1" data-data-state-version="1.1">
         <div id="ahus-rule-metadata" class="hidden" data-ruleset="TW-NHI-AHUS-INITIAL-SCOPED-V2.9">aHUS initial diagnosis / initial application only</div>
         <header class="mb-6 text-center pt-2 md:pt-4">
             <h1 class="text-xl md:text-2xl font-extrabold text-slate-900 mb-1">aHUS 罕病通報/健保審查條件評估工具</h1>
@@ -554,7 +554,7 @@
                         </svg>
                         <div class="absolute text-center">
                             <div id="nhi-percent-text" class="text-xl md:text-2xl font-black text-[var(--theme-primary)]">0%</div>
-                            <div class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-tighter mt-[-2px]">導航進度</div>
+                            <div class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-tighter mt-[-2px]">資料完整度</div>
                         </div>
                     </div>
                     <div class="flex-1 text-center md:text-left">
@@ -585,7 +585,7 @@
                                 <div id="list-essential" class="space-y-1"></div>
                             </div>
                             <div>
-                                <h4 class="text-xs font-bold text-[var(--theme-dark)] mb-2 border-l-4 border-[var(--theme-primary)] pl-2 uppercase">V. aHUS 定義 / TMA 導航</h4>
+                                <h4 class="text-xs font-bold text-[var(--theme-dark)] mb-2 border-l-4 border-[var(--theme-primary)] pl-2 uppercase">V. aHUS 定義 / TMA 資訊核對</h4>
                                 <div id="list-tma-判定" class="space-y-1"></div>
                             </div>
                         </div>
@@ -1324,7 +1324,7 @@
         id: 'TW-NHI-AHUS-INITIAL-SCOPED-V2.9',
         disease: 'aHUS',
         phase: 'initial',
-        sourceScope: '使用者提供之 aHUS 健保給付條件：第(1)定義、第(2)血漿治療反應不佳、第(3)排除診斷、第(4)重症；僅使用既有表單資料進行導航核對',
+        sourceScope: '使用者提供之 aHUS 健保給付條件：第(1)定義、第(2)血漿治療反應不佳、第(3)排除診斷、第(4)重症；僅使用既有表單資料進行審查資訊核對',
         excludedScope: '非 aHUS 疾病、藥物推薦、續申、轉換、退場與治療後追蹤'
     });
 
@@ -1335,6 +1335,8 @@
     function labNegativeStatus(v) { return v === 'Negative' ? S.PASS : (v === 'Postive' ? S.FAIL : S.UNKNOWN); }
     function excludedSelectStatus(v) { return v === '排除' ? S.PASS : (v === '無法排除' ? S.FAIL : S.UNKNOWN); }
     function conditionSelectStatus(v) { return v === '符合條件' ? S.PASS : (v === '不符合條件' ? S.FAIL : S.UNKNOWN); }
+    function historicalPlateletChoiceProvided(v) { return ['符合條件','不符合條件','無歷史紀錄可比對'].includes(v); }
+    function historicalPlateletNoHistory(v) { return v === '無歷史紀錄可比對'; }
     function allStatus(list) { return list.some(x => x === S.FAIL) ? S.FAIL : (list.every(x => x === S.PASS) ? S.PASS : S.UNKNOWN); }
     function anyStatus(list) { return list.some(x => x === S.PASS) ? S.PASS : (list.every(x => x === S.FAIL) ? S.FAIL : S.UNKNOWN); }
     function result(status, label, detail='', countForProgress=true) { return { status, label, detail, countForProgress }; }
@@ -1520,7 +1522,7 @@
         definition.hemolyticAnemia = result(
             hemolysisStatus,
             '急性溶血性貧血線索（由既有 Hb / Retic / Haptoglobin / Schistocyte / Indirect bilirubin 輔助）',
-            '本項為導航輔助，最終仍由醫師依臨床與檢驗整體判讀'
+            '本項為判讀輔助，最終仍由醫師依臨床與檢驗整體判讀'
         );
 
         definition.platelet = result(!knownNumber(d.latestPlt) ? S.UNKNOWN : (d.latestPlt < plateletLimit ? S.PASS : S.FAIL), `低血小板 < ${formatDisplayValue('plt', plateletLimit)} ${UNIT_SYSTEM.plt.displayUnit}`);
@@ -1544,11 +1546,19 @@
             `治療後血小板仍 < ${formatDisplayValue('plt', plateletLimit)} ${UNIT_SYSTEM.plt.displayUnit}`,
             knownNumber(d.latestPlt) ? `目前 ${formatDisplayValue('plt', d.latestPlt)} ${UNIT_SYSTEM.plt.displayUnit}` : '尚未填寫'
         );
-        plasma.plateletHistoricalComparison = result(
-            conditionSelectStatus(d.historicalPlateletComparison),
-            '比最近一次(須至少一個月前)TMA 之前之3次血小板數平均值低至少25%',
-            '本工具填寫欄位有限，建議人工確認是否符合此條件。'
-        );
+        const historicalChoiceProvided = historicalPlateletChoiceProvided(d.historicalPlateletComparison);
+        const historicalNoHistory = historicalPlateletNoHistory(d.historicalPlateletComparison);
+        plasma.plateletHistoricalComparison = {
+            ...result(
+                conditionSelectStatus(d.historicalPlateletComparison),
+                '比最近一次(須至少一個月前)TMA 之前之3次血小板數平均值低至少25%',
+                historicalNoHistory
+                    ? '已註記「無歷史紀錄可比對」；本項視為已提供資料，Path A 歷史比較不適用，系統改由 Path B 評估。'
+                    : '本工具填寫欄位有限，建議人工確認是否符合此條件。'
+            ),
+            dataProvided: historicalChoiceProvided,
+            noHistory: historicalNoHistory
+        };
 
         const fallbackAnalysis = d.plateletFallbackDateAnalysis || null;
 
@@ -1623,6 +1633,21 @@
             plasma.clauseI = S.UNKNOWN;
         }
 
+        // Data completeness is deliberately separate from clinical PASS/FAIL.
+        // - 符合 / 不符合: the historical-comparison question has been answered.
+        // - 無歷史紀錄可比對: the question has also been answered, but Path B data must be sufficient.
+        // - 請選擇: still missing.
+        const primaryPathDataProvided =
+            plasma.treatment.status !== S.UNKNOWN &&
+            plasma.plateletCurrent.status !== S.UNKNOWN &&
+            historicalChoiceProvided &&
+            !historicalNoHistory;
+        const fallbackPathDataProvided = fallbackRawStatus !== S.UNKNOWN;
+
+        plasma.clauseIDataProvided = historicalNoHistory
+            ? fallbackPathDataProvided
+            : primaryPathDataProvided;
+
         let ldhStatus = S.UNKNOWN;
         if (knownNumber(d.latestLdh)) {
             ldhStatus = d.latestLdh > d.ldhULN ? S.PASS : S.UNKNOWN;
@@ -1683,7 +1708,7 @@
             ttpStatus,
             'TTP 排除輔助：ADAMTS13 活性',
             knownNumber(d.adamts)
-                ? `目前 ${d.adamts}%；10% 為既有工具導航門檻，官方本段條文文字仍以「嚴重 ADAMTS13 功能欠損」描述`
+                ? `目前 ${d.adamts}%；10% 為既有工具輔助判讀門檻，官方本段條文文字仍以「嚴重 ADAMTS13 功能欠損」描述`
                 : '尚未填寫 ADAMTS13'
         );
 
@@ -2479,6 +2504,83 @@
         }
     }
 
+
+    // Export-only normalization for the continuous-monitoring table.
+    // The live diagnostic form intentionally keeps rowspan for a compact screen layout.
+    // html2canvas/PDF clones instead repeat the metric label on every visible record row,
+    // preventing a 5-row rowspan label from being clipped or lost during rasterization/page slicing.
+    function prepareMonitoringExportClone(clonedDoc) {
+        const section = clonedDoc.getElementById('sec-monitoring');
+        if (!section) return;
+
+        const table = section.closest('table');
+        if (table) {
+            table.style.tableLayout = 'fixed';
+            table.style.width = '100%';
+
+            const cols = table.querySelectorAll('colgroup col');
+            const widths = ['30%', '20%', '25%', '25%'];
+            cols.forEach((col, i) => {
+                if (widths[i]) {
+                    col.setAttribute('width', widths[i]);
+                    col.style.width = widths[i];
+                }
+            });
+        }
+
+        section.querySelectorAll('tr[id^="tr-"]').forEach(row => {
+            // Preserve the live form's hidden/unused monitoring rows.
+            if (row.style.display === 'none') return;
+
+            // Remove the desktop rowspan cell in the export clone only.
+            const rowspanCell = row.querySelector('td[id^="td-rs-"]');
+            if (rowspanCell) rowspanCell.remove();
+
+            // Reuse the already-generated mobile label cell as a normal first column.
+            // This guarantees every visible monitoring record carries its own test name.
+            const labelCell = row.querySelector('td.item-header');
+            if (!labelCell) return;
+
+            labelCell.classList.remove('md:hidden');
+            labelCell.style.display = 'table-cell';
+            labelCell.style.width = '30%';
+            labelCell.style.minWidth = '210px';
+            labelCell.style.maxWidth = '30%';
+            labelCell.style.fontWeight = '700';
+            labelCell.style.textAlign = 'center';
+            labelCell.style.verticalAlign = 'middle';
+            labelCell.style.whiteSpace = 'normal';
+            labelCell.style.wordBreak = 'break-word';
+            labelCell.style.overflowWrap = 'anywhere';
+            labelCell.style.lineHeight = '1.35';
+
+            row.style.breakInside = 'avoid';
+            row.style.pageBreakInside = 'avoid';
+        });
+
+        const style = clonedDoc.createElement('style');
+        style.setAttribute('data-export-monitoring-protection', '1');
+        style.textContent = `
+            #sec-monitoring tr[id^="tr-"] > td:first-child {
+                display: table-cell !important;
+                width: 30% !important;
+                min-width: 210px !important;
+                max-width: 30% !important;
+                font-weight: 700 !important;
+                text-align: center !important;
+                vertical-align: middle !important;
+                white-space: normal !important;
+                word-break: break-word !important;
+                overflow-wrap: anywhere !important;
+                line-height: 1.35 !important;
+            }
+            #sec-monitoring tr[id^="tr-"] > td:nth-child(2) { width: 20% !important; }
+            #sec-monitoring tr[id^="tr-"] > td:nth-child(3) { width: 25% !important; }
+            #sec-monitoring tr[id^="tr-"] > td:nth-child(4) { width: 25% !important; }
+        `;
+        clonedDoc.head.appendChild(style);
+    }
+
     function exportToImage() {
         const element = document.getElementById('mainContent');
         window.scrollTo(0, 0);
@@ -2512,6 +2614,8 @@
 
                     clonedDoc.querySelectorAll('.prog-badge').forEach(badge => badge.remove());
                     clonedDoc.querySelectorAll('.unfilled-highlight').forEach(el => el.classList.remove('unfilled-highlight'));
+
+                    prepareMonitoringExportClone(clonedDoc);
 
                     const clonedElement = clonedDoc.getElementById('mainContent');
                     clonedElement.style.width = targetWidth + 'px';
@@ -2619,6 +2723,8 @@
 
                     clonedDoc.querySelectorAll('.prog-badge').forEach(badge => badge.remove());
                     clonedDoc.querySelectorAll('.unfilled-highlight').forEach(el => el.classList.remove('unfilled-highlight'));
+
+                    prepareMonitoringExportClone(clonedDoc);
 
                     const clonedElement = clonedDoc.getElementById('mainContent');
                     clonedElement.style.width = targetWidth + 'px';
@@ -3537,17 +3643,26 @@
             if (!container) return;
             progressItems.push(...items.filter(i => i.countForProgress !== false));
             container.innerHTML = items.map(item => `<div class="check-item">
-                <span class="check-icon">${iconFor(item.status)}</span>
-                <div class="check-text ${classFor(item.status)} flex-1 min-w-0"><span>${item.label}</span>${item.detail ? `<span class="block text-[10px] mt-0.5 font-normal opacity-80">${item.detail}</span>` : ''}${item.controlHtml || ''}</div>
+                <span class="check-icon">${item.iconOverride || iconFor(item.status)}</span>
+                <div class="check-text ${item.classOverride || classFor(item.status)} flex-1 min-w-0"><span>${item.label}</span>${item.detail ? `<span class="block text-[10px] mt-0.5 font-normal opacity-80">${item.detail}</span>` : ''}${item.controlHtml || ''}</div>
             </div>`).join('');
         }
 
         const histPlateletSelect = `<select id="in_hist_plt_drop25" onchange="calculateNHICompliance()" class="mt-2 w-full md:max-w-xs border border-slate-300 rounded-md bg-white px-2 py-1.5 text-xs text-[var(--medical-text-main)]">
-            <option value="">無歷史比較資料／尚未選擇</option>
+            <option value="">請選擇</option>
             <option value="符合條件" ${d.historicalPlateletComparison === '符合條件' ? 'selected' : ''}>符合條件</option>
             <option value="不符合條件" ${d.historicalPlateletComparison === '不符合條件' ? 'selected' : ''}>不符合條件</option>
+            <option value="無歷史紀錄可比對" ${d.historicalPlateletComparison === '無歷史紀錄可比對' ? 'selected' : ''}>無歷史紀錄可比對</option>
         </select>`;
-        const histPlateletItem = { ...r.plasma.plateletHistoricalComparison, countForProgress: false, controlHtml: histPlateletSelect };
+        const histPlateletItem = {
+            ...r.plasma.plateletHistoricalComparison,
+            // Navigation completion is based only on whether this dropdown has been answered.
+            // PASS / FAIL / 無歷史紀錄可比對 all count as collected data; blank does not.
+            dataProvided: r.plasma.plateletHistoricalComparison.dataProvided,
+            controlHtml: histPlateletSelect,
+            iconOverride: d.historicalPlateletComparison === '無歷史紀錄可比對' ? 'ℹ️' : '',
+            classOverride: d.historicalPlateletComparison === '無歷史紀錄可比對' ? 'text-slate-700' : ''
+        };
 
         renderCheck('list-eligibility', [
             result(S.UNKNOWN, '條文 I－路徑 A：有歷史血小板資料', '下列 3 項需全部符合', false),
@@ -3561,8 +3676,8 @@
             r.plasma.scr,
             result(r.plasma.overall, '血漿治療反應不佳：條文 I～III 綜合核對', '條文 I 採 A/B 任一路徑；Path B 直接使用治療日期與 Platelet 日期/數值核對；條文 II、III 仍須同時符合。', false)
         ]);
-        // 條文 I 的 A/B 替代路徑在總導航進度中只計算一次。
-        progressItems.push(result(r.plasma.clauseI, '條文 I 血小板條件整體核對'));
+        // Navigation progress for this part of Clause I is counted by the historical
+        // platelet dropdown itself above. Do not add a second aggregate progress item.
 
         renderCheck('list-essential', [r.severe.hb, r.severe.platelet, r.severe.ldh]);
 
@@ -3589,8 +3704,11 @@ r.exclusions.influenza, r.exclusions.pneumo, r.exclusions.stec, r.exclusions.ttp
             r.exclusions.hellp, r.exclusions.drugs, r.exclusions.malignantHTN, r.exclusions.aps, r.exclusions.dic, r.exclusions.cobalamin
         ]);
 
+        const isDataComplete = item =>
+            typeof item.dataProvided === 'boolean' ? item.dataProvided : known(item.status);
+
         const total = progressItems.length;
-        const completed = progressItems.filter(i => known(i.status)).length;
+        const completed = progressItems.filter(isDataComplete).length;
         const percent = total ? Math.round(completed / total * 100) : 0;
         const gauge = document.getElementById('nhi-gauge-progress');
         if (gauge) gauge.style.strokeDashoffset = 276.4 - (276.4 * percent / 100);
@@ -3602,19 +3720,24 @@ r.exclusions.influenza, r.exclusions.pneumo, r.exclusions.stec, r.exclusions.ttp
         if (statusBox && statusMsg) {
             const allLeaf = progressItems;
             const fails = allLeaf.filter(i => i.status === S.FAIL).map(i => i.label);
-            const unknowns = allLeaf.filter(i => i.status === S.UNKNOWN).map(i => i.label);
+            const missingData = allLeaf.filter(i => !isDataComplete(i)).map(i => i.label);
+            const unresolved = allLeaf.filter(i => i.status === S.UNKNOWN && isDataComplete(i)).map(i => i.label);
             if (r.overall === S.PASS) {
                 statusBox.className = 'inline-block px-4 py-1.5 rounded-lg bg-green-100 text-green-700 font-bold text-sm mb-2 border border-green-200';
-                statusBox.innerText = '主要導航條件已核對';
+                statusBox.innerText = '審查必備資訊蒐集完畢';
                 statusMsg.innerText = '依現有詳細表單可自動判讀的 aHUS 首次健保條件已完成核對；標示為「需人工核對」的條文細節仍須由醫師依病歷確認。此結果不代表診斷或核准決定。';
             } else if (r.overall === S.FAIL) {
                 statusBox.className = 'inline-block px-4 py-1.5 rounded-lg bg-red-100 text-red-700 font-bold text-sm mb-2 border border-red-200';
                 statusBox.innerText = '目前存在未符合條件';
                 statusMsg.innerText = '現有表單已辨識到未符合的主要條件：' + fails.slice(0,3).join('；') + (fails.length > 3 ? '…' : '') + '。請依臨床情況及條文細節核實。';
-            } else {
+            } else if (missingData.length) {
                 statusBox.className = 'inline-block px-4 py-1.5 rounded-lg bg-amber-100 text-amber-700 font-bold text-sm mb-2 border border-amber-200';
                 statusBox.innerText = '尚缺關鍵資料';
-                statusMsg.innerText = '尚未完成的既有表單核對項目：' + unknowns.slice(0,3).join('；') + (unknowns.length > 3 ? '…' : '') + '。另有標示「需人工核對」的官方條文細節；導航進度僅代表可自動核對資料的完成度。';
+                statusMsg.innerText = '尚未完成資料蒐集的核對項目：' + missingData.slice(0,3).join('；') + (missingData.length > 3 ? '…' : '') + '。資料完整度代表審查所需資訊的蒐集程度，不代表條件符合率。';
+            } else {
+                statusBox.className = 'inline-block px-4 py-1.5 rounded-lg bg-amber-100 text-amber-700 font-bold text-sm mb-2 border border-amber-200';
+                statusBox.innerText = '資料已蒐集，部分條件尚待綜合判讀';
+                statusMsg.innerText = '目前沒有被判定為「尚缺資料」的資料核對項目，但仍有條件處於待判讀狀態：' + unresolved.slice(0,3).join('；') + (unresolved.length > 3 ? '…' : '') + '。此狀態與資料缺漏不同，請依 Path B 或人工核對資訊綜合判讀。';
             }
         }
         window.__AHUS_LAST_OFFICIAL_RESULT__ = r;
