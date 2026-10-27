@@ -12,21 +12,31 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
         :root {
-            /* Stage 2 v2.9 Unified Theme Engine
-               Public inputs: Primary / Light / Border / Text
-               Semantic status colors are fixed for clinical consistency. */
+            /* Theme Architecture v3.1
+               Public inputs: Primary / Section / Light / Panel / Border / Text
+               Clinical semantic colors remain fixed for consistent interpretation. */
             --theme-primary: #268c85;
+            --theme-section: #3f817b;
             --theme-light: #d4e8e6;
+            --theme-panel: #ffffff;
+
             --theme-primary-hover: #217b75;
             --theme-primary-dark: #1d6a65;
             --theme-primary-soft: #e7f2f1;
             --theme-primary-border: #badad8;
             --theme-primary-text: #23827c;
+            --theme-focus-ring: #268c8526;
 
-            --surface-page: #f6fafa;
-            --surface-card: #ffffff;
-            --surface-subtle: #edf5f5;
-            --surface-strong: #e0eeed;
+            --theme-section-hover: #3a7771;
+            --theme-section-border: #346a65;
+            --section-control-bg: #39746f;
+            --section-control-text: #ffffff;
+
+            --surface-page: #f7fbfb;
+            --surface-card: var(--theme-panel);
+            --surface-subtle: #f4f9f9;
+            --surface-strong: #eaf4f3;
+            --surface-input: #ffffff;
 
             --medical-border: #e2e8f0;
             --medical-border-strong: #bbc2cc;
@@ -34,6 +44,7 @@
             --medical-text-muted: #6d7480;
             --medical-text-subtle: #6d7480;
             --on-brand-text: #ffffff;
+            --on-section-text: #ffffff;
             --on-text: #ffffff;
 
             --semantic-success: #10b981;
@@ -49,7 +60,7 @@
             --semantic-warning-soft: #fffbeb;
             --semantic-warning-border: #fde68a;
 
-            /* Compatibility aliases: existing UI code can keep its old token names. */
+            /* Compatibility aliases: legacy UI code remains presentation-compatible. */
             --theme-accent: var(--theme-light);
             --theme-dark: var(--theme-primary-dark);
             --success-green: var(--semantic-success);
@@ -58,7 +69,7 @@
         }
 
         body {
-            background-color: #f6fafa;
+            background-color: var(--surface-page);
             padding: 10px;
             font-family: 'Inter', 'Segoe UI', 'Microsoft JhengHei', sans-serif;
             color: var(--medical-text-main);
@@ -73,7 +84,7 @@
             max-width: 210mm; 
             margin-left: auto;
             margin-right: auto;
-            background-color: #f6fafa;
+            background-color: var(--surface-page);
             overflow-x: hidden; 
         }
 
@@ -116,19 +127,19 @@
         .header-main, .header-main * { color: var(--on-brand-text) !important; }
 
         .sub-category {
-            background-color: #edf5f5; font-weight: 600; color: var(--theme-primary);
+            background-color: var(--theme-section); font-weight: 700; color: var(--on-section-text);
             border-left: 4px solid var(--theme-primary);
         }
 
         .label-row {
-            background-color: #edf5f5; font-weight: 600; color: var(--medical-text-muted);
+            background-color: var(--surface-strong); font-weight: 600; color: var(--medical-text-muted);
             font-size: 12px; text-align: center;
         }
 
         input[type="number"], select, input[type="text"], input[type="date"] {
-            width: 100%; border: 1.5px solid #e2e8f0; border-radius: 6px;
+            width: 100%; border: 1.5px solid var(--medical-border); border-radius: 6px;
             padding: 10px 6px; outline: none; font-size: 14px;
-            background-color: #fff; color: var(--medical-text-main); box-sizing: border-box; height: 44px; 
+            background-color: var(--surface-input); color: var(--medical-text-main); box-sizing: border-box; height: 44px; 
             -webkit-appearance: none; appearance: none; transition: all 0.2s;
         }
 
@@ -181,38 +192,38 @@
         .chart-title::before { content: ''; display: inline-block; width: 4px; height: 14px; background: var(--theme-primary); margin-right: 8px; border-radius: 2px; }
 
         .risk-badge { padding: 4px 10px; border-radius: 9999px; color: white; font-weight: 800; font-size: 11px; display: inline-block; }
-        .risk-low { background: #10b981; }
-        .risk-med { background: #f59e0b; }
-        .risk-high { background: #ef4444; }
+        .risk-low { background: var(--semantic-success); }
+        .risk-med { background: var(--semantic-warning); }
+        .risk-high { background: var(--semantic-danger); }
 
-        .platelet-alert { display: none; background: #fef2f2; border: 1px solid #fecaca; padding: 3px 8px; border-radius: 8px; color: #ef4444; font-weight: 700; font-size: 11px; }
+        .platelet-alert { display: none; background: var(--semantic-danger-soft); border: 1px solid var(--semantic-danger-border); padding: 3px 8px; border-radius: 8px; color: var(--semantic-danger); font-weight: 700; font-size: 11px; }
 
-        .check-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px dashed #e2e8f0; }
+        .check-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--medical-border); }
         .check-icon { font-size: 14px; flex-shrink: 0; margin-top: 2px; }
         .check-text { font-size: 13px; color: #1e293b; line-height: 1.5; font-weight: 500;}
         
         .compliance-gauge { width: 110px; height: 110px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .gauge-svg { transform: rotate(-90deg); }
-        .gauge-bg { fill: none; stroke: #f6fafa; stroke-width: 8; }
+        .gauge-bg { fill: none; stroke: #f7fbfb; stroke-width: 8; }
         .gauge-progress { fill: none; stroke: var(--theme-primary); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.8s ease-out; }
         .theme-accent-border { border-top: 4px solid var(--theme-primary); }
 
         .unfilled-highlight {
-            background-color: #fffbeb !important;
-            border-color: #f59e0b !important;
+            background-color: var(--semantic-warning-soft) !important;
+            border-color: var(--semantic-warning) !important;
             transition: all 0.3s ease;
         }
         .unfilled-highlight::placeholder {
-            color: #b45309 !important;
+            color: var(--semantic-warning-hover) !important;
             opacity: 0.7;
         }
         .prog-badge { transition: all 0.3s ease; }
-        .prog-complete { background-color: #ecfdf5; color: #059669; border-color: #a7f3d0; }
-        .prog-incomplete { background-color: #fffbeb; color: #b45309; border-color: #fde68a; }
+        .prog-complete { background-color: var(--semantic-success-soft); color: var(--semantic-success-hover); border-color: var(--semantic-success-border); }
+        .prog-incomplete { background-color: var(--semantic-warning-soft); color: var(--semantic-warning-hover); border-color: var(--semantic-warning-border); }
 
         #uploadDropzone.dragover {
-            background-color: #e7f2f1 !important;
-            border-color: #268c85 !important;
+            background-color: var(--theme-primary-soft) !important;
+            border-color: var(--theme-primary) !important;
             transform: scale(1.02);
         }
 
@@ -246,7 +257,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                border-bottom: 1px solid #f6fafa;
+                border-bottom: 1px solid var(--medical-border);
                 padding: 0.75rem 1rem;
                 text-align: right;
                 min-height: 48px;
@@ -255,12 +266,12 @@
 
             td.item-header {
                 display: block;
-                background-color: #edf5f5;
-                color: var(--theme-dark);
+                background-color: var(--surface-subtle);
+                color: var(--medical-text-main);
                 font-weight: 700;
                 text-align: left;
                 padding: 0.75rem 1rem;
-                border-bottom: 2px solid var(--theme-primary) !important;
+                border-bottom: 2px solid var(--medical-border-strong) !important;
                 font-size: 0.95rem;
             }
 
@@ -347,6 +358,100 @@
         [class~="border-green-200"], [class~="border-emerald-200"] { border-color: var(--semantic-success-border) !important; }
         [class~="text-pink-600"] { color: var(--theme-primary-dark) !important; }
 
+
+        /* Theme Architecture v3.1 hierarchy layer.
+           Level 1 = Primary major headers; Level 2 = Section headers; Level 3 = Light-derived label rows;
+           Panel controls content surfaces. This layer intentionally overrides legacy utility colors. */
+        .glass-card, .chart-card {
+            background-color: var(--surface-card) !important;
+            border-color: var(--medical-border) !important;
+        }
+
+        tr.sub-category {
+            background: var(--theme-section) !important;
+            color: #ffffff !important;
+        }
+        tr.sub-category > td {
+            background: var(--theme-section) !important;
+            color: #ffffff !important;
+            border-top: 1px solid var(--theme-section-border) !important;
+            border-bottom: 1px solid var(--theme-section-border) !important;
+            border-right: 1px solid var(--theme-section-border) !important;
+            border-left: 4px solid var(--theme-primary) !important;
+        }
+        tr.sub-category:hover > td { background: var(--theme-section-hover) !important; }
+
+        /* Section header content is deliberately white to separate level-2 headers
+           from Light/Panel level-3 content. Semantic status badges are overridden below. */
+        tr.sub-category > td,
+        tr.sub-category > td > div,
+        tr.sub-category > td > div > span,
+        tr.sub-category > td > div > div,
+        tr.sub-category > td > div > div > span,
+        tr.sub-category .toggle-icon,
+        tr.sub-category .toggle-badge,
+        tr.sub-category a.no-print {
+            color: #ffffff !important;
+        }
+        tr.sub-category > td > div > div:first-child > span:first-child span {
+            color: #ffffff !important;
+            opacity: .82;
+        }
+        tr.sub-category .toggle-badge > span:not(.prog-badge),
+        tr.sub-category .toggle-badge > button,
+        tr.sub-category a.no-print {
+            background: var(--section-control-bg) !important;
+            color: #ffffff !important;
+            border-color: var(--theme-section-border) !important;
+        }
+        tr.sub-category .prog-complete {
+            background: var(--semantic-success-soft) !important;
+            color: var(--semantic-success-hover) !important;
+            border-color: var(--semantic-success-border) !important;
+        }
+        tr.sub-category .prog-incomplete {
+            background: var(--semantic-warning-soft) !important;
+            color: var(--semantic-warning-hover) !important;
+            border-color: var(--semantic-warning-border) !important;
+        }
+
+        tr.label-row, tr.label-row > td {
+            background: var(--surface-strong) !important;
+            color: var(--medical-text-muted) !important;
+            border-color: var(--medical-border) !important;
+        }
+
+        tbody.section-content tr,
+        .plasmic-table tr,
+        .score-row {
+            background-color: var(--surface-card);
+            border-color: var(--medical-border);
+        }
+
+        @media screen and (max-width: 768px) {
+            tr.sub-category {
+                display: block;
+                margin-bottom: .75rem !important;
+                border: 1px solid var(--theme-section-border) !important;
+                border-left: 4px solid var(--theme-primary) !important;
+                border-radius: .75rem !important;
+                background: var(--theme-section) !important;
+                overflow: hidden;
+                box-shadow: 0 2px 6px rgba(0,0,0,.04);
+            }
+            tr.sub-category > td {
+                border: none !important;
+                background: var(--theme-section) !important;
+                color: #ffffff !important;
+            }
+            tr.sub-category:hover > td { background: var(--theme-section-hover) !important; }
+            td.item-header {
+                background-color: var(--surface-subtle) !important;
+                color: var(--medical-text-main) !important;
+                border-bottom-color: var(--medical-border-strong) !important;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -370,7 +475,7 @@
 </div>
 
 <div class="a4-container" id="mainContent">
-    <form id="checklistForm" data-rule-scope="aHUS-initial-only">
+    <form id="checklistForm" data-rule-scope="aHUS-initial-only" data-theme-version="3.1">
         <div id="ahus-rule-metadata" class="hidden" data-ruleset="TW-NHI-AHUS-INITIAL-SCOPED-V2.9">aHUS initial diagnosis / initial application only</div>
         <header class="mb-6 text-center pt-2 md:pt-4">
             <h1 class="text-xl md:text-2xl font-extrabold text-slate-900 mb-1">aHUS 罕病通報/健保審查條件評估工具</h1>
@@ -2398,7 +2503,7 @@
                 scale: 2, 
                 useCORS: true, 
                 logging: false, 
-                backgroundColor: '#f6fafa',
+                backgroundColor: '#f7fbfb',
                 width: targetWidth,
                 windowWidth: targetWidth, 
                 onclone: (clonedDoc) => {
@@ -2438,7 +2543,7 @@
                         div.innerText = val || ' '; 
                         div.style.cssText = `
                             width: 100%; border: 1.5px solid #e2e8f0; border-radius: 6px;
-                            padding: 10px 8px; font-size: 14px; background-color: #fff;
+                            padding: 10px 8px; font-size: 14px; background-color: #ffffff;
                             box-sizing: border-box; min-height: 44px; display: flex;
                             align-items: center; color: #1e293b; word-break: break-word;
                             line-height: 1.4;
@@ -2505,7 +2610,7 @@
                 scale: 2, 
                 useCORS: true, 
                 logging: false, 
-                backgroundColor: '#f6fafa',
+                backgroundColor: '#f7fbfb',
                 width: targetWidth,
                 windowWidth: targetWidth, 
                 onclone: (clonedDoc) => {
@@ -2545,7 +2650,7 @@
                         div.innerText = val || ' '; 
                         div.style.cssText = `
                             width: 100%; border: 1.5px solid #e2e8f0; border-radius: 6px;
-                            padding: 10px 8px; font-size: 14px; background-color: #fff;
+                            padding: 10px 8px; font-size: 14px; background-color: #ffffff;
                             box-sizing: border-box; min-height: 44px; display: flex;
                             align-items: center; color: #1e293b; word-break: break-word;
                             line-height: 1.4;
@@ -2663,9 +2768,9 @@
                         th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; vertical-align: middle; font-size: 14px;}
                         .major-section-header { background-color: #268c85; color: #ffffff; font-weight: bold; text-align: center; font-size: 16px; padding: 12px; margin-bottom: 10px; }
                         .header-main { background-color: #268c85; color: #ffffff; font-weight: bold; text-align: center; }
-                        .sub-category { background-color: #edf5f5; color: #268c85; font-weight: bold; }
-                        .label-row { background-color: #edf5f5; color: #6d7480; font-weight: bold; text-align: center; }
-                        .item-header { background-color: #edf5f5; font-weight: bold; color: #1d6a65; }
+                        .sub-category { background-color: #3f817b; color: #ffffff; font-weight: bold; border: 1px solid #346a65; }
+                        .label-row { background-color: #eaf4f3; color: #6d7480; font-weight: bold; text-align: center; }
+                        .item-header { background-color: #f4f9f9; font-weight: bold; color: #1e293b; }
                         .result-cell { font-weight: bold; text-align: right; }
                         h1, h3 { color: #1e293b; }
                     </style>
